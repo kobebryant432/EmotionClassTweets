@@ -7,41 +7,11 @@ from itertools import product
 I_kleene_dienes = lambda x, y: max(1-x, y)
 I_lukasiewicz = lambda x, y: min(1, 1-x+y)
 
-
 # t-norms
 # --------
 
 T_min = lambda x, y: min(x, y)
 T_lukasiewicz = lambda x, y: max(0, x+y-1)
-
-
-# fuzzy quantifiers
-# ------------------
-
-Q_exists = lambda x: 0 if x == 0 else 1
-Q_forall = lambda x: 1 if x == 1 else 0
-Q_jump = lambda x, jump: 0 if x <= jump else 1
-
-
-def q_linear(x, start, stop):
-    if x <= start:
-        return 0
-    elif start < x < stop:
-        return (x - start)/(stop - start)
-    else:
-        return 1
-
-
-def q_quadratic(x, start, stop):
-    if x <= start:
-        return 0
-    elif start < x <= (start + stop)/2:
-        return 2*(x - start)**2/(stop - start)**2
-    elif (start + stop)/2 < x <= stop:
-        return 1 - 2*(x - stop)**2/(stop - start)**2
-    else:
-        return 1
-
 
 # OWA weights
 # ------------
@@ -65,11 +35,39 @@ W_invadd_U = lambda n: [1/i*sum(1/j for j in range(1, n+1)) for i in range(1, n+
 # upper and lower approximations
 # -------------------------------
 def lower_approx_owa(x, top_k, I, rel, A, w):
+    """generates the membership of x to the lower owa approximation
+
+    Parameters:
+        x (vectors)
+        top_k (lis:vectors): the k-nearest neighbours of x
+        T (functions):  The t_norm
+        rel (functions): The relation function
+        A (functions): A membership function
+        w (vector) : The owa weights
+
+    Returns:
+        (float): The resulting membership of x
+
+    """
     arguments = [I(rel(x["Vector"], y["Vector"]), A(y)) for _, y in top_k.iterrows()]
     arguments.sort(reverse=True)
     return sum(weight*argument for weight, argument in zip(w, arguments))
 
 def upper_approx_owa(x, top_k, T, rel, A, w):
+    """generates the membership of x to the upper owa approximation
+
+    Parameters:
+        x (vectors)
+        top_k (lis:vectors): the k-nearest neighbours of x
+        T (functions):  The t_norm
+        rel (functions): The relation function
+        A (functions): A membership function
+        w (vector) : The owa weights
+
+    Returns:
+        (float): The resulting membership of x
+
+    """
     arguments = [T(rel(x["Vector"], y["Vector"]), A(y)) for _, y in top_k.iterrows()]
     arguments.sort(reverse=True)
     return sum(weight*argument for weight, argument in zip(w, arguments))
@@ -79,6 +77,7 @@ def upper_approx_owa(x, top_k, T, rel, A, w):
 
 # distance between average of vectors
 def distance1(v, w, order = 2):
+    """Calculates the distance between vectors v and w"""
     dist = norm(v-w, order)
     return dist
 
@@ -86,12 +85,20 @@ def distance1(v, w, order = 2):
 # --------------------
 
 def relation1(v, w):
+    """Calculates the cossine_similarity between two vectors v and w"""
     cos_sim = v/norm(v) @ w/norm(w)
     return (cos_sim + 1)/2
 
 
 # Generating distance based relations
 def relation_from_d_measure(tweet_vectors, d):
+    """Generating the distance based relation from the distnance measure d using the
+            Parameters:
+                tweet_vectors(list: vectors): The universe of vectors
+                d(function): Distance measure
+            Returns:
+                (float)
+        """
     max_dist = max(d(x, y, np.inf) for x, y in product(tweet_vectors, tweet_vectors))
     return lambda x, y: 1 - d(x, y, np.inf) / max_dist
 

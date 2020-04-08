@@ -38,12 +38,12 @@ def lexicon_avg(word_vecs, row, lexicon):
 
 def all_lexicon_avg(word_vecs, row, lexicons):
     """Takes the weighted average of the vectors.
-       Weighted according to the lexicon score with base weight = 1/len(word_vecs)
+       Weighted according to the lexicon score for all lexicons in the list, with base weight = 1/len(word_vecs)
 
         Parameters:
             word_vecs (list:vectors):  A list of the word vectors
             row (pandas Series): The row in the dataframe corresponding with the tweet of the given word_vecs
-            lexicons (list:Lexiocon): The lexicon used to get the weights of the words
+            lexicons (list:Lexicon): The list of lexicons used to get the weights of the words
 
         Returns:
             (vector): The resulting weighted averaged vector

@@ -21,7 +21,7 @@ def main(data_path, embedding, aggregation_method, mlm_method, evaluation=0):
         Evaluation metric(Int): If = 0 use gold labels, if >0 use as cross-validation amount
 
     Returns:
-        list: A list of words representing the processed tweet
+        result (tuple): The averaged Pearson Correlation coefficient with the corresponding p-values
 
     """
     data_frame = generate_tweet_vector(data_path, embedding, aggregation_method)
@@ -35,6 +35,17 @@ def main(data_path, embedding, aggregation_method, mlm_method, evaluation=0):
 
 
 def generate_tweet_vector(data_path, embedding, aggregation_method):
+    """Given a dataset, embedding, aggregationMethod, the function generates a DataFrame with TweetVectors
+
+    Parameters:
+        Dataset (string): The path to the input dataset
+        Embedding (Embedding): The embedding method
+        AggregationMethod (function): Generates the tweet vectors
+
+    Returns:
+        pandas DataFrame: The panda DataFrame
+
+    """
     # Transforming the raw data to a panda data frame
     data_frame = raw_to_panda(data_path)
 
@@ -48,6 +59,13 @@ def generate_tweet_vector(data_path, embedding, aggregation_method):
 
 
 def principle_component_analysis(data_frame, name):
+    """Principle component analysis on the TweetVectors, generating 2-D plots
+
+    Parameters:
+        data_frame (pandas DataFrame): The pandas DataFrame containing the columns ["Label"] and ["Vector"]
+        name (str) : The name of the plot
+
+    """
     pca = PCA(n_components=2)
     sc = StandardScaler()
     y = data_frame.loc[:, ["Label"]].values
@@ -77,6 +95,17 @@ def principle_component_analysis(data_frame, name):
     ax.grid()
 
 def validate(k, method, df):
+    """Performs a k-fold crossvalidation on the data for a given method.
+
+    Parameters:
+        k (int >0): The number of folds to be performed
+        method (MLMethod ) : The machine learning method
+        df (pandas DataFrame) : The data on which to perform CV
+
+    Returns:
+        (float, list:floats) = The average Pearson Correlation coefficient and the corresponging p-values
+
+    """
     np.random.seed(3)
     kf = KFold(n_splits=k)
     val_results = []
