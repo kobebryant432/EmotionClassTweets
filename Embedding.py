@@ -15,7 +15,7 @@ class EmbeddingMethod:
        ----------
        name : str
            the name of the embedding method
-       embed :
+       embed : <embed>
            the embedding loaded from the path
 
        Methods
@@ -23,7 +23,7 @@ class EmbeddingMethod:
         generate_embedding(path):
            loads the embedding function/dictionary from the path
 
-        word_vec_generator(data):
+        word_vec_generator(row):
             allocates the word vector to a given word
 
        """
@@ -36,7 +36,16 @@ class EmbeddingMethod:
     def generate_embedding(self, path):
         raise NotImplementedError
 
-    def generate_word_vectors(self, tweet):
+    def generate_word_vectors(self, row):
+        """Given a row in of a data frame, this function generates the word vectors of the the words in that row.
+
+        Parameters:
+            row (pandas Series): A single row of the dataframe with ["TweetText"] and ["Words"] columns
+
+        Returns:
+            vecs (list): A list of the resulting word vectors.
+
+        """
         raise NotImplementedError
 
 
@@ -53,6 +62,7 @@ class Bert(EmbeddingMethod):
         vecs = []
         for wordvec in results[0][1]:
             vecs.append(wordvec)
+        return vecs
 
 
 class WordToVec(EmbeddingMethod):

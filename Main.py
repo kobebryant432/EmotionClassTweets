@@ -13,17 +13,17 @@ def main(data_path, embedding, aggregation_method, mlm_method, evaluation=0):
        metric the function calculates the pearson correlation coefficient of the model with the
        provided settings.
 
-            Parameters:
-            Dataset (string): The path to the input dataset
-            Embedding (Embedding): The embedding method
-            AggregationMethod (function): Generates the tweet vectors
-            MLMmethod (MLMmethod): The machine learning method
-            Evaluation metric(Int): If = 0 use gold labels, if >0 use as cross-validation amount
+    Parameters:
+        Dataset (string): The path to the input dataset
+        Embedding (Embedding): The embedding method
+        AggregationMethod (function): Generates the tweet vectors
+        MLMmethod (MLMmethod): The machine learning method
+        Evaluation metric(Int): If = 0 use gold labels, if >0 use as cross-validation amount
 
-            Returns:
-            list: A list of words representing the processed tweet
+    Returns:
+        list: A list of words representing the processed tweet
 
-           """
+    """
     data_frame = generate_tweet_vector(data_path, embedding, aggregation_method)
 
     if evaluation > 0:
