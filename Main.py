@@ -2,23 +2,23 @@
 import numpy as np
 from DataParser import raw_to_panda
 from sklearn.model_selection import KFold
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
 from matplotlib import pyplot as plt
 import pandas as pd
+from Transformations import principle_component_analysis, dmlmj
 
 
-def main(data_path, embedding, aggregation_method, mlm_method, evaluation=0):
+def main(data_path, embedding, aggregation_method, mlm_method, evaluation=0, transformation = 0):
     """Given a dataset, embedding, aggregationMethod, Machine learning method and an evaluation
        metric the function calculates the pearson correlation coefficient of the model with the
        provided settings.
 
     Parameters:
-        Dataset (string): The path to the input dataset
-        Embedding (Embedding): The embedding method
-        AggregationMethod (function): Generates the tweet vectors
-        MLMmethod (MLMmethod): The machine learning method
-        Evaluation metric(Int): If = 0 use gold labels, if >0 use as cross-validation amount
+        data_path (string): The path to the input dataset
+        embedding (Embedding): The embedding method
+        aggregation_method (function): Generates the tweet vectors
+        mlm_method (MLMmethod): The machine learning method
+        evaluation (Int): If = 0 use gold labels, if >0 use as cross-validation amount
+        transformation (Int): If = 0 no transformation, if = 1 pca, if 2 dlmjm.
 
     Returns:
         result (tuple): The averaged Pearson Correlation coefficient with the corresponding p-values
@@ -27,7 +27,7 @@ def main(data_path, embedding, aggregation_method, mlm_method, evaluation=0):
     data_frame = generate_tweet_vector(data_path, embedding, aggregation_method)
 
     if evaluation > 0:
-        result = validate(evaluation, mlm_method, data_frame)
+        result = validate(evaluation, mlm_method, data_frame, transformation)
     else:
         result = 0
 
@@ -38,9 +38,9 @@ def generate_tweet_vector(data_path, embedding, aggregation_method):
     """Given a dataset, embedding, aggregationMethod, the function generates a DataFrame with TweetVectors
 
     Parameters:
-        Dataset (string): The path to the input dataset
-        Embedding (Embedding): The embedding method
-        AggregationMethod (function): Generates the tweet vectors
+        data_path (string): The path to the input dataset
+        embedding (Embedding): The embedding method
+        aggregation_method (function): Generates the tweet vectors
 
     Returns:
         pandas DataFrame: The panda DataFrame
@@ -58,49 +58,14 @@ def generate_tweet_vector(data_path, embedding, aggregation_method):
     return data_frame
 
 
-def principle_component_analysis(data_frame, name):
-    """Principle component analysis on the TweetVectors, generating 2-D plots
-
-    Parameters:
-        data_frame (pandas DataFrame): The pandas DataFrame containing the columns ["Label"] and ["Vector"]
-        name (str) : The name of the plot
-
-    """
-    pca = PCA(n_components=2)
-    sc = StandardScaler()
-    y = data_frame.loc[:, ["Label"]].values
-    x = pd.DataFrame(data_frame["Vector"].tolist())
-
-    x = sc.fit_transform(x)
-    principlecomponents = pca.fit_transform(x)
-    principalDf = pd.DataFrame(data=principlecomponents, columns=['principal component 1', 'principal component 2'])
-
-    finalDf = pd.concat([principalDf, data_frame[["Label"]]], axis=1)
-
-    fig = plt.figure(figsize=(8, 8))
-    ax = fig.add_subplot(1, 1, 1)
-    ax.set_xlabel('Principal Component 1', fontsize=15)
-    ax.set_ylabel('Principal Component 2', fontsize=15)
-    ax.set_title('2 component PCA ' + name, fontsize=20)
-
-    targets = [0, 1, 2, 3]
-    colors = ['r', 'b', 'g', 'y']
-    for target, color in zip(targets, colors):
-        indices_to_keep = finalDf['Label'] == target
-        ax.scatter(finalDf.loc[indices_to_keep, 'principal component 1']
-                   , finalDf.loc[indices_to_keep, 'principal component 2']
-                   , c=color
-                   , s=50)
-    ax.legend(["0: Not present", "1", "2", "3: Very present"])
-    ax.grid()
-
-def validate(k, method, df):
+def validate(k, method, df, transformation=0):
     """Performs a k-fold crossvalidation on the data for a given method.
 
     Parameters:
         k (int >0): The number of folds to be performed
         method (MLMethod ) : The machine learning method
         df (pandas DataFrame) : The data on which to perform CV
+        transformation (Int): If = 0 no transformation, if = 1 pca, if 2 dlmjm.
 
     Returns:
         (float, list:floats) = The average Pearson Correlation coefficient and the corresponging p-values
@@ -110,7 +75,11 @@ def validate(k, method, df):
     kf = KFold(n_splits=k)
     val_results = []
     p_values = []
+    if transformation == 1:
+        principle_component_analysis(df)
     for train_index, test_index in kf.split(df):
+        if transformation == 2:
+            dmlmj(train, test)
         train, test = df.loc[train_index], df.loc[test_index]
         r, p = method.result(test, train)
         val_results.append(r)
@@ -118,3 +87,23 @@ def validate(k, method, df):
     return sum(val_results) / k, p_values
 
 
+def plot(data_frame, title):
+    df = pd.DataFrame(item for item in data_frame["Vector"])
+    df["Label"] = data_frame["Label"]
+
+    fig = plt.figure(figsize=(8, 8))
+    ax = fig.add_subplot(1, 1, 1)
+    ax.set_xlabel('Vector 1', fontsize=15)
+    ax.set_ylabel('Vector 2', fontsize=15)
+    ax.set_title(title, fontsize=20)
+
+    targets = [0, 1, 2, 3]
+    colors = ['r', 'b', 'g', 'y']
+    for target, color in zip(targets, colors):
+        indices_to_keep = df['Label'] == target
+        ax.scatter(df.loc[indices_to_keep, 0]
+                   , df.loc[indices_to_keep, 1]
+                   , c=color
+                   , s=50)
+    ax.legend(["0: Not present", "1", "2", "3: Very present"])
+    ax.grid()
