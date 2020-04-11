@@ -3,6 +3,7 @@ import time
 import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+import matlab.engine
 
 
 
@@ -28,20 +29,24 @@ def principle_component_analysis(data_frame):
 def dmlmj(train, test=None):
     train1 = pd.DataFrame(item for item in train["Vector"])
     train1["Label"] = train["Label"].values
-    train1.to_csv(r"D:\School\Thesis\MatLab\Out\train.csv")
+    train1.to_csv(r"Out\train.csv")
 
     if test is not None:
         test1 = pd.DataFrame(item for item in test["Vector"])
         test1["Label"] = test["Label"].values
-        test1.to_csv(r"D:\School\Thesis\MatLab\Out\test.csv")
+        test1.to_csv(r"Out\test.csv")
 
-    train_vectors = wait_for_file(r"D:\School\Thesis\MatLab\In\train_in.csv")
-    if test is not None:
-        test_vectors = wait_for_file(r"D:\School\Thesis\MatLab\In\test_in.csv")
+    eng = matlab.engine.start_matlab()
+    eng.addpath('matlab')
+    eng.thesis_distance_learning(nargout=0)
 
-    os.remove(r"D:\School\Thesis\MatLab\Out\train.csv")
+    train_vectors = wait_for_file(r"In\train_in.csv")
     if test is not None:
-        os.remove(r"D:\School\Thesis\MatLab\Out\test.csv")
+        test_vectors = wait_for_file(r"In\test_in.csv")
+
+    os.remove(r"Out\train.csv")
+    if test is not None:
+        os.remove(r"Out\test.csv")
 
     if test is not None:
         test["Vector"] = test_vectors.values

@@ -62,9 +62,11 @@ for name, agg in agg_methods.items():
     dat = generate_tweet_vector(data_paths[0], glove, agg)
     dmlmj(dat)
     plot(dat, "dmlmj")
-    results["Aggmethod"].append(name)
-    results[MLM[-1].name].append(main(data_paths[0], glove, agg, MLM[-1], 5, 1)[0])
 
-results["Aggmethod"] = results["Aggmethod"][:4]
-resultsdf = pd.DataFrame(results)
-resultsdf.to_excel(r"C:\Users\Kobe\Desktop\0.000000000001\results.xlsx")
+
+#     results["Aggmethod"].append(name)
+#     results[MLM[-1].name].append(main(data_paths[0], glove, agg, MLM[-1], 5, 1)[0])
+#
+# results["Aggmethod"] = results["Aggmethod"][:4]
+# resultsdf = pd.DataFrame(results)
+# resultsdf.to_excel(r"C:\Users\Kobe\Desktop\0.000000000001\results.xlsx")

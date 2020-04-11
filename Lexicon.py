@@ -2,7 +2,7 @@ import pandas as pd
 # Lexicon class
 
 
-class lexicon:
+class Lexicon:
     """
         A class used to represent a Lexicon
 
@@ -70,10 +70,10 @@ def load_lexicon(df, Elex=True):
             elex = df[df["emotion"] == emo]
             for idx, row in elex.iterrows():
                 lexd[row["word"]] = row["score"]
-            lexicons.append(lexicon(emo, lexd))
+            lexicons.append(Lexicon(emo, lexd))
     else:
         lexd = dict()
         for idx, row in df.iterrows():
             lexd[row["word"]] = row["score"]
-        lexicons.append(lexicon(emotion="sentiment", wordlex=lexd))
+        lexicons.append(Lexicon(emotion="sentiment", wordlex=lexd))
     return lexicons
