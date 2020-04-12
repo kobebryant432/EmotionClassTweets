@@ -5,9 +5,10 @@ from sklearn.model_selection import KFold
 from matplotlib import pyplot as plt
 import pandas as pd
 from Transformations import principle_component_analysis, dmlmj
+from tqdm import tqdm
 
 
-def main(data_path, embedding, aggregation_method, mlm_method, evaluation=0, transformation = 0):
+def main(data_path, embedding, aggregation_method, mlm_method, evaluation=0, gold_data=None, transformation = 0):
     """Given a dataset, embedding, aggregationMethod, Machine learning method and an evaluation
        metric the function calculates the pearson correlation coefficient of the model with the
        provided settings.
@@ -18,6 +19,7 @@ def main(data_path, embedding, aggregation_method, mlm_method, evaluation=0, tra
         aggregation_method (function): Generates the tweet vectors
         mlm_method (MLMmethod): The machine learning method
         evaluation (Int): If = 0 use gold labels, if >0 use as cross-validation amount
+        gold_data (String): The path to the gold data set in the case of final testing used only if evaluation = 0
         transformation (Int): If = 0 no transformation, if = 1 pca, if 2 dlmjm.
 
     Returns:
@@ -26,11 +28,18 @@ def main(data_path, embedding, aggregation_method, mlm_method, evaluation=0, tra
     """
     data_frame = generate_tweet_vector(data_path, embedding, aggregation_method)
 
+    if gold_data is not None:
+        gold_data_frame = generate_tweet_vector(gold_data, embedding, aggregation_method)
+
+    # If a cross-validation value k is given do cross validation
     if evaluation > 0:
         result = validate(evaluation, mlm_method, data_frame, transformation)
+    # If no k but gold_data is given, perform final evaluation on gold labels
+    elif gold_data is not None:
+        result = gold_test(data_frame, gold_data_frame, mlm_method, transformation)
+    # Bad input
     else:
-        result = 0
-
+        return "No gold data or no evaluation=k for cross-validation"
     return result
 
 
@@ -71,20 +80,31 @@ def validate(k, method, df, transformation=0):
         (float, list:floats) = The average Pearson Correlation coefficient and the corresponging p-values
 
     """
+    print("Beginning " + k + "-fold cross validation")
     np.random.seed(3)
     kf = KFold(n_splits=k)
     val_results = []
     p_values = []
     if transformation == 1:
         principle_component_analysis(df)
-    for train_index, test_index in kf.split(df):
+    for train_index, test_index in tqdm(kf.split(df)):
+        train, test = df.loc[train_index], df.loc[test_index]
         if transformation == 2:
             dmlmj(train, test)
-        train, test = df.loc[train_index], df.loc[test_index]
         r, p = method.result(test, train)
         val_results.append(r)
         p_values.append(p)
     return sum(val_results) / k, p_values
+
+
+def gold_test(train, test, mlm_method, transformation):
+    if transformation == 1:
+        principle_component_analysis(train)
+        principle_component_analysis(test)
+    elif transformation == 2:
+        dmlmj(train, test)
+    r, p = mlm_method.result(train, test)
+    return r, p
 
 
 def plot(data_frame, title):

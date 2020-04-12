@@ -3,10 +3,18 @@
   <component name="ChangeListManager">
     <list default="true" id="247a4ef6-6805-4f08-959e-820bdbfa3d1e" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Lexicon.py" beforeDir="false" afterPath="$PROJECT_DIR$/Lexicon.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Loading.py" beforeDir="false" afterPath="$PROJECT_DIR$/Loading.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Test.py" beforeDir="false" afterPath="$PROJECT_DIR$/Test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Transformations.py" beforeDir="false" afterPath="$PROJECT_DIR$/Transformations.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Main.py" beforeDir="false" afterPath="$PROJECT_DIR$/Main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Readme.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo_DMLMJ.m" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo_KDMLMJ.m" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/matlab/In/train_in.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/matlab/Out/train.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/matlab/data/1-s2.0-S0031320316303600-gr2_lrg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/matlab/data/1-s2.0-S0031320316303600-gr3_lrg.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/matlab/data/balance.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/matlab/data/rings.mat" beforeDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -56,6 +64,9 @@
       <module name="FinalCode" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
       <option name="SDK_HOME" value="D:\Anaconda\envs\Thesis\python.exe" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
@@ -95,6 +106,9 @@
       <module name="FinalCode" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
       <option name="SDK_HOME" value="D:\Anaconda\envs\Thesis\python.exe" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
@@ -155,6 +169,9 @@
       <module name="FinalCode" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
       <option name="SDK_HOME" value="D:\Anaconda\envs\Thesis\python.exe" />
       <option name="WORKING_DIRECTORY" value="D:/Downloads" />
       <option name="IS_MODULE_SDK" value="false" />

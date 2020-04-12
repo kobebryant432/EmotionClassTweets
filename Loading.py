@@ -1,4 +1,5 @@
 ##
+#Imports
 from Main import main, generate_tweet_vector, plot
 from Transformations import principle_component_analysis, dmlmj
 import Embedding as em
@@ -7,20 +8,24 @@ from AggregationMethods import n_avg, lexicon_avg, all_lexicon_avg
 import MLMethod as M
 import FuzzyRough as fr
 from collections import defaultdict
-import pandas as pd
 
 ##
-# Insert the paths to the raw datasets
+# Insert the paths to the raw datasets, test and training+development
 emotions = ["anger", "fear", "joy", "sadness"]
-data_paths = []
+training_data_paths = []
 for emo in emotions:
-    d = path_to_file = r"D:\School\Thesis\Thesis - Inputdata\2018-EI-oc-En-" + emo + "-dev-and-train.txt"
-    data_paths.append(d)
+    d = r"Thesis - Inputdata\2018-EI-oc-En-" + emo + "-dev-and-train.txt"
+    training_data_paths.append(d)
+
+test_data_paths = []
+for emo in emotions:
+    d = r"Thesis - Inputdata\2018-EI-oc-En-" + emo + "-test-gold.txt"
+    test_data_paths.append(d)
 ##
-# Insert paths/type of embeddings
+# Insert paths/type of embeddings(bert, Glove, Word2vec: Skipgram)
 path_bert = 'book_corpus_wiki_en_cased'
-path_glove = "D:\School\Thesis\Thesis - Embeddings\GloVe\glove.6B.300d.w2vformat.txt"
-path_word2vec = "D:\School\Thesis\Thesis - Embeddings\Word2Vec\GoogleNews-vectors-negative300.bin"
+path_glove = r"Thesis - Embeddings\GloVe\glove.6B.300d.w2vformat.txt"
+path_word2vec = r"Thesis - Embeddings\Word2Vec\GoogleNews-vectors-negative300.bin"
 
 # loading the embeding methods
 glove = em.WordToVec("glove", path_glove)
@@ -28,11 +33,10 @@ glove = em.WordToVec("glove", path_glove)
 # bert = em.Bert("bert", path_bert)
 # embeds = [glove, word_two_vec, bert]
 ##
-# Lexicons
-# Insert path of Lexicon Files:
+# Insert path to the Lexicon Files:
 print("Loading Lexicons")
-path_emo_lex = r"D:\School\Thesis\Lexicons\NRC-Hashtag-Emotion-Lexicon-v0.2\NRC-Hashtag-Emotion-Lexicon-v0.2.txt"
-path_sen_lex = r"D:\School\Thesis\Lexicons\NRC-Hashtag-Sentiment-Lexicon-v1.0\HS-unigrams.txt"
+path_emo_lex = r"Lexicons\NRC-Hashtag-Emotion-Lexicon-v0.2\NRC-Hashtag-Emotion-Lexicon-v0.2.txt"
+path_sen_lex = r"Lexicons\NRC-Hashtag-Sentiment-Lexicon-v1.0\HS-unigrams.txt"
 
 # Generating the lexicons
 lexi = l.load_lexicon(l.datareader(path_emo_lex))
@@ -59,7 +63,7 @@ MLM = [
 results = defaultdict(list)
 #
 for name, agg in agg_methods.items():
-    dat = generate_tweet_vector(data_paths[0], glove, agg)
+    dat = generate_tweet_vector(training_data_paths[0], glove, agg)
     dmlmj(dat)
     plot(dat, "dmlmj")
 
