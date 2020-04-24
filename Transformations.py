@@ -22,7 +22,7 @@ def principle_component_analysis(data_frame):
     x = pd.DataFrame(data_frame["Vector"].tolist())
     x = sc.fit_transform(x)
     principlecomponents = pca.fit_transform(x)
-    principalDf = pd.DataFrame(data=principlecomponents, columns=['principal component 1', 'principal component 2'])
+    principalDf = pd.DataFrame(data=principlecomponents)
     data_frame["Vector"] = principalDf.values.tolist()
 
 
@@ -36,6 +36,7 @@ def dmlmj(train, test=None):
         test1["Label"] = test["Label"].values
         test1.to_csv(r"Out\test.csv")
 
+    print("\n Running Matlab Script")
     eng = matlab.engine.start_matlab()
     eng.addpath('matlab')
     eng.thesis_distance_learning(nargout=0)
@@ -53,12 +54,10 @@ def dmlmj(train, test=None):
     train["Vector"] = train_vectors.values
 
 def wait_for_file(file_path):
-    print("Waiting for file")
     while not os.path.exists(file_path):
         time.sleep(1)
 
     if os.path.isfile(file_path):
-        print("Found")
         T = pd.read_csv(file_path)
         T = T.iloc[:, :-1]
         T['Vector'] = T.values.tolist()

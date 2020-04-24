@@ -1,8 +1,9 @@
 ##
 import numpy as np
 from gensim.models import KeyedVectors
-from tqdm import tqdm
-from bert_embedding import BertEmbedding
+import gluonnlp as nlp
+import mxnet as mx
+import time
 
 
 class EmbeddingMethod:
@@ -51,18 +52,38 @@ class EmbeddingMethod:
 
 class Bert(EmbeddingMethod):
     def __init__(self, name, path):
+        model, vocab = nlp.model.get_model('bert_12_768_12', dataset_name=path,
+                                           use_classifier=False, use_decoder=False)
+        tokenizer = nlp.data.BERTTokenizer(vocab, lower=True)
+        transform = nlp.data.BERTSentenceTransform(tokenizer, max_seq_length=512, pair=False, pad=False)
+        self.vocab = vocab
+        self.tokenizer = tokenizer
+        self.transform = transform
         super(Bert, self).__init__(name, path)
 
     def generate_embedding(self, path):
-        return BertEmbedding(model='bert_24_1024_16', dataset_name=path)
+        model, vocab = nlp.model.get_model('bert_24_1024_16', dataset_name=path, use_classifier=False, use_decoder=False)
+        return model
 
-    def generate_word_vectors(self, row):
-        sentence = row["TweetText"]
-        results = self.embed([sentence])
-        vecs = []
-        for wordvec in results[0][1]:
-            vecs.append(wordvec)
-        return vecs
+    def generate_word_vectors(self, row, cls=False):
+        sample = self.transform([row["TweetText"]])
+        words, valid_len, segments = mx.nd.array([sample[0]]), mx.nd.array([sample[1]]), mx.nd.array([sample[2]])
+        text = [self.vocab.bos_token] + self.tokenizer(row["TweetText"]) + [self.vocab.eos_token]
+        seq_encoding, cls_encoding = self.embed(words, segments, valid_len)
+        # Since Bert embedds some unkown words by cutting them up, here we take the average of the cut up word vectors,
+        # hereby obtaining the word vectors for the full words
+        if cls:
+            return cls_encoding[0]
+        else:
+            vecs = []
+            for i, t in enumerate(text):
+                if t is not None:
+                    if t[0] == "#":
+                        vecs[-1] += seq_encoding[0][i]
+                        vecs[-1] /= 2
+                    else:
+                        vecs.append(seq_encoding[0][i])
+        return [v.asnumpy() for v in vecs]
 
 
 class WordToVec(EmbeddingMethod):
@@ -87,5 +108,3 @@ class WordToVec(EmbeddingMethod):
             else:
                 vecs.append(np.zeros(self.embed.vector_size))
         return vecs
-
-

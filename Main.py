@@ -6,16 +6,17 @@ from matplotlib import pyplot as plt
 import pandas as pd
 from Transformations import principle_component_analysis, dmlmj
 from tqdm import tqdm
+from AggregationMethods import sentence_avg
 
 
-def main(data_path, embedding, aggregation_method, mlm_method, evaluation=0, gold_data=None, transformation = 0):
+def main(data_frame,  mlm_method, evaluation=0, transformation=0,  gold_data_frame=None):
     """Given a dataset, embedding, aggregationMethod, Machine learning method and an evaluation
        metric the function calculates the pearson correlation coefficient of the model with the
        provided settings.
 
     Parameters:
         data_path (string): The path to the input dataset
-        embedding (Embedding): The embedding method
+        embedding (EmbeddingMethod): The embedding method
         aggregation_method (function): Generates the tweet vectors
         mlm_method (MLMmethod): The machine learning method
         evaluation (Int): If = 0 use gold labels, if >0 use as cross-validation amount
@@ -26,16 +27,12 @@ def main(data_path, embedding, aggregation_method, mlm_method, evaluation=0, gol
         result (tuple): The averaged Pearson Correlation coefficient with the corresponding p-values
 
     """
-    data_frame = generate_tweet_vector(data_path, embedding, aggregation_method)
-
-    if gold_data is not None:
-        gold_data_frame = generate_tweet_vector(gold_data, embedding, aggregation_method)
 
     # If a cross-validation value k is given do cross validation
     if evaluation > 0:
         result = validate(evaluation, mlm_method, data_frame, transformation)
     # If no k but gold_data is given, perform final evaluation on gold labels
-    elif gold_data is not None:
+    elif gold_data_frame is not None:
         result = gold_test(data_frame, gold_data_frame, mlm_method, transformation)
     # Bad input
     else:
@@ -43,12 +40,12 @@ def main(data_path, embedding, aggregation_method, mlm_method, evaluation=0, gol
     return result
 
 
-def generate_tweet_vector(data_path, embedding, aggregation_method):
+def generate_tweet_vector(data_path, embedding, aggregation_method=sentence_avg):
     """Given a dataset, embedding, aggregationMethod, the function generates a DataFrame with TweetVectors
 
     Parameters:
         data_path (string): The path to the input dataset
-        embedding (Embedding): The embedding method
+        embedding (EmbeddingMethod): The embedding method
         aggregation_method (function): Generates the tweet vectors
 
     Returns:
@@ -57,12 +54,9 @@ def generate_tweet_vector(data_path, embedding, aggregation_method):
     """
     # Transforming the raw data to a panda data frame
     data_frame = raw_to_panda(data_path)
-
+    tqdm.pandas()
     # Generating the word vectors, calculating the tweet vector with the given aggregation method
-    tweet_vectors = []
-    for index, row in data_frame.iterrows():
-        tweet_vectors.append(aggregation_method(embedding.generate_word_vectors(row), row))
-    data_frame["Vector"] = tweet_vectors
+    data_frame["Vector"] = data_frame.progress_apply(lambda row: aggregation_method(embedding.generate_word_vectors(row), row), axis=1)
 
     return data_frame
 
@@ -72,7 +66,7 @@ def validate(k, method, df, transformation=0):
 
     Parameters:
         k (int >0): The number of folds to be performed
-        method (MLMethod ) : The machine learning method
+        method (MLMethod) : The machine learning method
         df (pandas DataFrame) : The data on which to perform CV
         transformation (Int): If = 0 no transformation, if = 1 pca, if 2 dlmjm.
 
@@ -80,16 +74,18 @@ def validate(k, method, df, transformation=0):
         (float, list:floats) = The average Pearson Correlation coefficient and the corresponging p-values
 
     """
-    print("Beginning " + k + "-fold cross validation")
+    print("Beginning " + str(k) + "-fold cross validation on: " + method.name)
     np.random.seed(3)
     kf = KFold(n_splits=k)
     val_results = []
     p_values = []
     if transformation == 1:
+        print("Performing PCA")
         principle_component_analysis(df)
     for train_index, test_index in tqdm(kf.split(df)):
         train, test = df.loc[train_index], df.loc[test_index]
         if transformation == 2:
+            print("Performing dmlmj")
             dmlmj(train, test)
         r, p = method.result(test, train)
         val_results.append(r)

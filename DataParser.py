@@ -16,14 +16,14 @@ def raw_to_panda(Data):
                                           2) (List; Strings) The list of words in the tweet
                                           3) (Int) The emotion score or label of the tweet
           """
-    data_frame = pd.DataFrame(columns=["TweetText", "Words", "Label"])
+    data_frame = pd.DataFrame(columns=["TweetText", "Hash_tagwords", "Words", "Label"])
     with open(Data, 'r', encoding='utf-8') as file:
         header_line = next(file)
         for line in file:
             line = line.rstrip().split("\t")
-            clean_text = clean_tweet(line[1])
+            clean_text, hash_tagwords = clean_tweet(line[1])
             label = int(line[3][0])
-            df1 = pd.DataFrame([[" ".join(clean_text), clean_text, label]] ,columns=["TweetText", "Words", "Label"])
+            df1 = pd.DataFrame([[" ".join(clean_text), clean_text,hash_tagwords, label]], columns=["TweetText", "Words", "Hash_tagwords", "Label"])
             data_frame = data_frame.append(df1, ignore_index=True)
     return data_frame
 
@@ -56,6 +56,8 @@ def clean_tweet(text):
     text = text.replace(r"\n", "")
 
     # remove the # sign
+    hashtagwords = re.findall(r'(?:\s|^)#[\w_-]+', text)
+    hashtagwords = [h.replace("#","") for h in hashtagwords]
     text = text.replace("#", "")
 
     # detect and remove ordinals
@@ -67,6 +69,7 @@ def clean_tweet(text):
     text = emoji.demojize(text)
 
     #encoding punctuation
+    text = text.replace("_", "")
     text = text.replace("'", '')
     text = text.replace("’", '')
     text = text.replace(".", " . ")
@@ -74,9 +77,9 @@ def clean_tweet(text):
     text = text.replace("?", " ? ")
     text = text.replace("!", " ! ")
 
-    # remove all characters except a to z and apostrophes
+    # remove all characters except a to z and apostrophes (i.e. numbers etc)
     text = re.sub(r"[^A-Za-z'’,.?_!]+", ' ', text)
 
     special_words = ["MENTION", "ORDINAL", "URL"]
 
-    return [word for word in text.split() if word not in special_words]
+    return [word for word in text.split() if word not in special_words], hashtagwords
