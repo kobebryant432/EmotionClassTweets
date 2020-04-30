@@ -2,13 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="247a4ef6-6805-4f08-959e-820bdbfa3d1e" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Tst.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Embedding.py" beforeDir="false" afterPath="$PROJECT_DIR$/Embedding.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Experiments.py" beforeDir="false" afterPath="$PROJECT_DIR$/Experiments.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MLMethod.py" beforeDir="false" afterPath="$PROJECT_DIR$/MLMethod.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Main.py" beforeDir="false" afterPath="$PROJECT_DIR$/Main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Test.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Tst.py" beforeDir="false" afterPath="$PROJECT_DIR$/Tst.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
