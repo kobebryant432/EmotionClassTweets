@@ -37,7 +37,7 @@ class EmbeddingMethod:
     def generate_embedding(self, path):
         raise NotImplementedError
 
-    def generate_word_vectors(self, row):
+    def generate_word_vectors(self, row, lexicons=None):
         """Given a row in of a data frame, this function generates the word vectors of the the words in that row.
 
         Parameters:
@@ -65,7 +65,7 @@ class Bert(EmbeddingMethod):
         model, vocab = nlp.model.get_model('bert_24_1024_16', dataset_name=path, use_classifier=False, use_decoder=False)
         return model
 
-    def generate_word_vectors(self, row, cls=False):
+    def generate_word_vectors(self, row, lexicons=None, cls=False):
         sample = self.transform([row["TweetText"]])
         words, valid_len, segments = mx.nd.array([sample[0]]), mx.nd.array([sample[1]]), mx.nd.array([sample[2]])
         text = [self.vocab.bos_token] + self.tokenizer(row["TweetText"]) + [self.vocab.eos_token]
@@ -73,7 +73,7 @@ class Bert(EmbeddingMethod):
         # Since Bert embedds some unkown words by cutting them up, here we take the average of the cut up word vectors,
         # hereby obtaining the word vectors for the full words
         if cls:
-            return cls_encoding[0]
+            return cls_encoding[0].asnumpy()
         else:
             vecs = []
             for i, t in enumerate(text):
@@ -83,7 +83,10 @@ class Bert(EmbeddingMethod):
                         vecs[-1] /= 2
                     else:
                         vecs.append(seq_encoding[0][i])
-        return [v.asnumpy() for v in vecs]
+        if lexicons:
+            return [np.concatenate([v.asnumpy(), generate_lexicon_scores(w, lexicons)]) for v, w in zip(vecs, row["Words"])]
+        else:
+            return [v.asnumpy() for v in vecs]
 
 
 class WordToVec(EmbeddingMethod):
@@ -99,12 +102,26 @@ class WordToVec(EmbeddingMethod):
         )
         return model
 
-    def generate_word_vectors(self, row):
+    def generate_word_vectors(self, row, lexicons=None):
         model = self.embed
         vecs = []
         for w in row["Words"]:
-            if w in model:
-                vecs.append(np.array(model[w]))
+            if lexicons:
+                lex_vec = generate_lexicon_scores(w, lexicons)
             else:
-                vecs.append(np.zeros(self.embed.vector_size))
+                lex_vec = []
+            if w in model:
+                vecs.append(np.concatenate([np.array(model[w]), lex_vec]))
+            else:
+                vecs.append(np.concatenate([np.zeros(self.embed.vector_size), lex_vec]))
         return vecs
+
+
+def generate_lexicon_scores(word, lexicons):
+    vec = []
+    for l in lexicons:
+        if word in l.wordlex.keys():
+            vec.append(l.wordlex[word])
+        else:
+            vec.append(0)
+    return vec

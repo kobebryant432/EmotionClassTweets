@@ -1,9 +1,9 @@
 from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
-import scipy.stats
-from frlearn.neighbours.classification import FRNNClassifier
+from frlearn.ensembles.classifiers import FRNN
 from frlearn.neighbours.neighbour_search import KDTree
+import frlearn.base as b
 
 import pandas as pd
 
@@ -57,7 +57,7 @@ class SklearnMethods(MLMethod):
         x_test, y_test = pd.DataFrame(item for item in test["Vector"]), pd.Series(test["Label"], dtype=int)
         self.model.fit(x_training, y_training)
         y_predicted = self.model.predict(x_test)
-        return scipy.stats.pearsonr(y_test, y_predicted)
+        return y_test, y_predicted
 
 
 class SVM(SklearnMethods):
@@ -81,7 +81,7 @@ class NearestNeighbour(SklearnMethods):
         A class extending SklearnMethods used to represent a Random Forest. Input k, the number of nearest neighbours.
     """
     def __init__(self, k):
-        super().__init__("KNN", KNeighborsClassifier(n_neighbors=k))
+        super().__init__("KNN", KNeighborsClassifier(n_neighbors=k,))
 
 
 class FRNN_OWA(SklearnMethods):
@@ -95,16 +95,16 @@ class FRNN_OWA(SklearnMethods):
                k, the number of nearest neighbours
                distance, true is relation is a distance measure.
     """
-    def __init__(self, name, weights_lower, weights_upper):
-        search = KDTree()
+    def __init__(self, name, weights_lower, weights_upper, k, metric="euclidean"):
+        search = KDTree(metric=metric)
         super().__init__(
             name,
-            model=FRNNClassifier(nn_search=search, upper_weights=weights_upper)
+            model=b.FitPredictClassifier(FRNN, upper_weights=weights_upper, upper_k=k, lower_weights=weights_lower, lower_k=k, nn_search=search)
         )
 
     def result(self, test, train):
-        x_training, y_training = pd.DataFrame(item for item in train["Vector"]),  pd.Series(train["Label"], dtype=int)
+        x_training, y_training = pd.DataFrame(item for item in train["Vector"]), pd.Series(train["Label"], dtype=int)
         x_test, y_test = pd.DataFrame(item for item in test["Vector"]), pd.Series(test["Label"], dtype=int)
-        self.model.fit(x_training, y_training)
-        y_predicted = self.model.predict(x_test)
-        return scipy.stats.pearsonr(y_test, y_predicted)
+        self.model.fit(x_training.values, y_training.values)
+        y_predicted = self.model.predict(x_test.values)
+        return y_test, y_predicted

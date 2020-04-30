@@ -1,5 +1,6 @@
 ##
 import numpy as np
+import scipy.stats
 from DataParser import raw_to_panda
 from sklearn.model_selection import KFold
 from matplotlib import pyplot as plt
@@ -40,7 +41,7 @@ def main(data_frame,  mlm_method, evaluation=0, transformation=0,  gold_data_fra
     return result
 
 
-def generate_tweet_vector(data_path, embedding, aggregation_method=sentence_avg):
+def generate_tweet_vector(data_path, embedding, aggregation_method=sentence_avg, lexicons=None, cls=None):
     """Given a dataset, embedding, aggregationMethod, the function generates a DataFrame with TweetVectors
 
     Parameters:
@@ -52,11 +53,14 @@ def generate_tweet_vector(data_path, embedding, aggregation_method=sentence_avg)
         pandas DataFrame: The panda DataFrame
 
     """
-    # Transforming the raw data to a panda data frame
     data_frame = raw_to_panda(data_path)
     tqdm.pandas()
-    # Generating the word vectors, calculating the tweet vector with the given aggregation method
-    data_frame["Vector"] = data_frame.progress_apply(lambda row: aggregation_method(embedding.generate_word_vectors(row), row), axis=1)
+    if cls:
+        data_frame["Vector"] = data_frame.progress_apply(lambda row: embedding.generate_word_vectors(row, lexicons, cls=True), axis=1)
+    # Transforming the raw data to a panda data frame
+    else:
+        # Generating the word vectors, calculating the tweet vector with the given aggregation method
+        data_frame["Vector"] = data_frame.progress_apply(lambda row: aggregation_method(embedding.generate_word_vectors(row, lexicons), row), axis=1)
 
     return data_frame
 
@@ -77,8 +81,8 @@ def validate(k, method, df, transformation=0):
     print("Beginning " + str(k) + "-fold cross validation on: " + method.name)
     np.random.seed(3)
     kf = KFold(n_splits=k)
-    val_results = []
-    p_values = []
+    all_test_label = []
+    all_predicted_label = []
     if transformation == 1:
         print("Performing PCA")
         principle_component_analysis(df)
@@ -87,10 +91,10 @@ def validate(k, method, df, transformation=0):
         if transformation == 2:
             print("Performing dmlmj")
             dmlmj(train, test)
-        r, p = method.result(test, train)
-        val_results.append(r)
-        p_values.append(p)
-    return sum(val_results) / k, p_values
+        y_test, y_pred = method.result(test, train)
+        for y in y_test: all_test_label.append(y)
+        for y in y_pred: all_predicted_label.append(y)
+    return scipy.stats.pearsonr(all_predicted_label, all_test_label)
 
 
 def gold_test(train, test, mlm_method, transformation):
