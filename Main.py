@@ -10,7 +10,7 @@ from tqdm import tqdm
 from AggregationMethods import sentence_avg
 
 
-def main(data_frame,  mlm_method, evaluation=0, transformation=0,  gold_data_frame=None):
+def main(data_frame,  mlm_method, evaluation=0, transformation=(0, 2),  gold_data_frame=None):
     """Given a dataset, embedding, aggregationMethod, Machine learning method and an evaluation
        metric the function calculates the pearson correlation coefficient of the model with the
        provided settings.
@@ -65,8 +65,8 @@ def generate_tweet_vector(data_path, embedding, aggregation_method=sentence_avg,
     return data_frame
 
 
-def validate(k, method, df, transformation=0):
-    """Performs a k-fold crossvalidation on the data for a given method.
+def validate(k, method, df, transformation=(0, 2)):
+    """Performs a k-fold cross-validation on the data for a given method.
 
     Parameters:
         k (int >0): The number of folds to be performed
@@ -83,14 +83,16 @@ def validate(k, method, df, transformation=0):
     kf = KFold(n_splits=k)
     all_test_label = []
     all_predicted_label = []
-    if transformation == 1:
-        print("Performing PCA")
-        principle_component_analysis(df)
     for train_index, test_index in tqdm(kf.split(df)):
         train, test = df.loc[train_index], df.loc[test_index]
-        if transformation == 2:
+        if transformation[0] == 1:
+            print("Performing PCA")
+            data_frame = pd.concat([train, test], keys=['x', 'y'])
+            principle_component_analysis(data_frame, dim=transformation[1])
+            train, test = data_frame.loc['x'], data_frame.loc['y']
+        if transformation[0] == 2:
             print("Performing dmlmj")
-            dmlmj(train, test)
+            dmlmj(train, test, dim=transformation[1])
         y_test, y_pred = method.result(test, train)
         for y in y_test: all_test_label.append(y)
         for y in y_pred: all_predicted_label.append(y)
@@ -98,13 +100,14 @@ def validate(k, method, df, transformation=0):
 
 
 def gold_test(train, test, mlm_method, transformation):
-    if transformation == 1:
-        principle_component_analysis(train)
-        principle_component_analysis(test)
-    elif transformation == 2:
-        dmlmj(train, test)
+    if transformation[0] == 1:
+        data_frame = pd.concat([train, test], keys=['x', 'y'])
+        principle_component_analysis(data_frame, dim=transformation[1])
+        train, test = data_frame.loc['x'], data_frame.loc['y']
+    elif transformation[0] == 2:
+        dmlmj(train, test, dim=transformation[1])
     r, p = mlm_method.result(train, test)
-    return r, p
+    return scipy.stats.pearsonr(r, p)
 
 
 def plot(data_frame, title):

@@ -6,9 +6,7 @@ from sklearn.preprocessing import StandardScaler
 import matlab.engine
 
 
-
-
-def principle_component_analysis(data_frame):
+def principle_component_analysis(data_frame, dim=2):
     """Principle component analysis on the TweetVectors, generating 2-D plots
 
     Parameters:
@@ -16,7 +14,7 @@ def principle_component_analysis(data_frame):
         train (str) (pandas DataFrame): The pandas DataFrame containing the columns ["Label"] and ["Vector"]
 
     """
-    pca = PCA(n_components=2)
+    pca = PCA(n_components=dim)
     sc = StandardScaler()
     y = data_frame.loc[:, ["Label"]].values
     x = pd.DataFrame(data_frame["Vector"].tolist())
@@ -26,7 +24,7 @@ def principle_component_analysis(data_frame):
     data_frame["Vector"] = principalDf.values.tolist()
 
 
-def dmlmj(train, test=None):
+def dmlmj(train, test=None, dim=2):
     train1 = pd.DataFrame(item for item in train["Vector"])
     train1["Label"] = train["Label"].values
     train1.to_csv(r"Out\train.csv")
@@ -39,6 +37,7 @@ def dmlmj(train, test=None):
     print("\n Running Matlab Script")
     eng = matlab.engine.start_matlab()
     eng.addpath('matlab')
+    eng.workspace['dim'] = dim
     eng.thesis_distance_learning(nargout=0)
 
     train_vectors = wait_for_file(r"In\train_in.csv")
@@ -52,6 +51,7 @@ def dmlmj(train, test=None):
     if test is not None:
         test["Vector"] = test_vectors.values
     train["Vector"] = train_vectors.values
+
 
 def wait_for_file(file_path):
     while not os.path.exists(file_path):

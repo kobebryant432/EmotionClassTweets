@@ -1,11 +1,12 @@
 from sklearn import svm
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from frlearn.ensembles.classifiers import FRNN
 from frlearn.neighbours.neighbour_search import KDTree
 import frlearn.base as b
-
 import pandas as pd
+
 
 class MLMethod:
     """
@@ -53,9 +54,14 @@ class SklearnMethods(MLMethod):
         self.model = model
 
     def result(self, test, train):
-        x_training, y_training = pd.DataFrame(item for item in train["Vector"]),  pd.Series(train["Label"], dtype=int)
+        scaler = MinMaxScaler()
+        x_training, y_training = pd.DataFrame(item for item in train["Vector"]), pd.Series(train["Label"], dtype=int)
         x_test, y_test = pd.DataFrame(item for item in test["Vector"]), pd.Series(test["Label"], dtype=int)
-        self.model.fit(x_training, y_training)
+        x_training = scaler.fit_transform(x_training)
+        x_test = scaler.transform(x_test)
+        x_training = x_training / x_training.shape[-1]
+        x_test = x_test / x_test.shape[-1]
+        self.model.fit(x_training, y_training.values)
         y_predicted = self.model.predict(x_test)
         return y_test, y_predicted
 
@@ -81,7 +87,7 @@ class NearestNeighbour(SklearnMethods):
         A class extending SklearnMethods used to represent a Random Forest. Input k, the number of nearest neighbours.
     """
     def __init__(self, k):
-        super().__init__("KNN", KNeighborsClassifier(n_neighbors=k,))
+        super().__init__("KNN", KNeighborsClassifier(n_neighbors=k,  metric="euclidean"))
 
 
 class FRNN_OWA(SklearnMethods):
@@ -103,8 +109,13 @@ class FRNN_OWA(SklearnMethods):
         )
 
     def result(self, test, train):
+        scaler = MinMaxScaler()
         x_training, y_training = pd.DataFrame(item for item in train["Vector"]), pd.Series(train["Label"], dtype=int)
         x_test, y_test = pd.DataFrame(item for item in test["Vector"]), pd.Series(test["Label"], dtype=int)
-        self.model.fit(x_training.values, y_training.values)
-        y_predicted = self.model.predict(x_test.values)
+        x_training = scaler.fit_transform(x_training)
+        x_test = scaler.transform(x_test)
+        x_training = x_training/x_training.shape[-1]
+        x_test = x_test/x_test.shape[-1]
+        self.model.fit(x_training, y_training.values)
+        y_predicted = self.model.predict(x_test)
         return y_test, y_predicted
